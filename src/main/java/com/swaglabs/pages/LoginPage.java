@@ -3,6 +3,7 @@ package com.swaglabs.pages;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
+import com.codeborne.selenide.Selenide;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
 
@@ -16,8 +17,8 @@ public class LoginPage {
     private final SelenideElement errorIcon       = $(".error-button");
 
     @Step("Open login page")
-    public LoginPage open() {
-        open("/");
+    public LoginPage openPage() {
+        Selenide.open("/");
         return this;
     }
 

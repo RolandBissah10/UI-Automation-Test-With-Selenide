@@ -3,16 +3,16 @@ package com.swaglabs.utils;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.WebDriverRunner;
 import io.qameta.allure.Allure;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -37,9 +37,12 @@ public class ScreenshotUtils {
      */
     public static void takeScreenshot(String stepName) {
         try {
-            byte[] screenshot = captureScreenshotAsBytes();
-            if (screenshot != null && screenshot.length > 0) {
-                Allure.addAttachment(stepName, "image/png", new ByteArrayInputStream(screenshot), ".png");
+            // Selenide.screenshot(String) saves to file and returns the path
+            String timestamp = LocalDateTime.now().format(FORMATTER);
+            File screenshot = new File(Selenide.screenshot(stepName + "_" + timestamp));
+            if (screenshot != null) {
+                byte[] bytes = Files.readAllBytes(screenshot.toPath());
+                Allure.addAttachment(stepName, "image/png", new ByteArrayInputStream(bytes), ".png");
                 log.debug("Screenshot captured: {}", stepName);
             }
         } catch (Exception e) {
@@ -55,42 +58,22 @@ public class ScreenshotUtils {
      */
     public static Path saveScreenshot(String testName) {
         try {
-            String filename = testName + "_" + LocalDateTime.now().format(FORMATTER) + ".png";
-            Path dir = Paths.get(SCREENSHOT_DIR);
-            Files.createDirectories(dir);
-            Path target = dir.resolve(filename);
+            String timestamp = LocalDateTime.now().format(FORMATTER);
+            String filename = testName + "_" + timestamp;
 
-            byte[] screenshot = captureScreenshotAsBytes();
-            if (screenshot != null && screenshot.length > 0) {
-                Files.write(target, screenshot);
-                log.info("Screenshot saved: {}", target.toAbsolutePath());
-                return target;
+            File screenshot = new File(Selenide.screenshot(filename));
+            if (screenshot != null) {
+                Path dir = Paths.get(SCREENSHOT_DIR);
+                Files.createDirectories(dir);
+                Path dest = dir.resolve(screenshot.getName());
+                Files.copy(screenshot.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
+                log.info("Screenshot saved: {}", dest.toAbsolutePath());
+                return dest;
             }
         } catch (IOException e) {
             log.warn("Failed to save screenshot for '{}': {}", testName, e.getMessage());
         }
         return null;
-    }
-
-    private static byte[] captureScreenshotAsBytes() throws IOException {
-        // Try Selenide native API first (varies by version), then fallback to WebDriver TakesScreenshot.
-        try {
-            String screenshotPath = Selenide.screenshot("screenshot-" + System.currentTimeMillis());
-            if (screenshotPath != null) {
-                Path path = Paths.get(screenshotPath);
-                if (Files.exists(path)) {
-                    return Files.readAllBytes(path);
-                }
-            }
-        } catch (Exception ignored) {
-            // fallback to direct Selenium screenshot capture
-        }
-
-        try {
-            return ((TakesScreenshot) WebDriverRunner.getWebDriver()).getScreenshotAs(OutputType.BYTES);
-        } catch (Exception e) {
-            throw new IOException("Unable to capture screenshot", e);
-        }
     }
 
     /**
@@ -100,7 +83,7 @@ public class ScreenshotUtils {
      */
     public static void capturePageSource(String label) {
         try {
-            String source = Selenide.source();
+            String source = WebDriverRunner.getWebDriver().getPageSource();
             Allure.addAttachment(label + " (page source)", "text/html",
                     new ByteArrayInputStream(source.getBytes()), ".html");
         } catch (Exception e) {
