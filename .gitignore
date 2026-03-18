@@ -1,0 +1,41 @@
+### Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+
+### IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### VS Code
+.vscode/
+
+### Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+### Logs
+logs/
+*.log
+
+### Allure
+allure-results/
+allure-report/
+
+### Screenshots
+selenide-screenshots/
+
+### OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,151 @@
+name: Selenide UI Tests — Swag Labs
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Test suite to run"
+        required: true
+        default: "all"
+        type: choice
+        options: [ all, smoke, regression ]
+      browser:
+        description: "Browser"
+        required: true
+        default: "chrome"
+        type: choice
+        options: [ chrome, firefox ]
+
+env:
+  JAVA_VERSION: "17"
+  MAVEN_OPTS: "-Xmx2g"
+
+jobs:
+  # ── Smoke tests — run on every push ──────────────────────────────────────────
+  smoke-tests:
+    name: "Smoke Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Run smoke tests
+        run: |
+          mvn test -Psmoke \
+            -Dbrowser=chrome \
+            -Dheadless=true \
+            -B --no-transfer-progress
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-smoke
+          path: target/allure-results
+          retention-days: 7
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-smoke-failure
+          path: target/selenide-screenshots
+          retention-days: 7
+
+  # ── Regression tests — run on PRs to main/develop ────────────────────────────
+  regression-tests:
+    name: "Regression Tests"
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && inputs.suite != 'smoke')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Run regression tests
+        run: |
+          mvn test -Pregression \
+            -Dbrowser=${{ github.event.inputs.browser || 'chrome' }} \
+            -Dheadless=true \
+            -B --no-transfer-progress
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-regression
+          path: target/allure-results
+          retention-days: 14
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-regression-failure
+          path: target/selenide-screenshots
+          retention-days: 14
+
+  # ── Allure report generation ─────────────────────────────────────────────────
+  generate-report:
+    name: "Generate Allure Report"
+    runs-on: ubuntu-latest
+    needs: [ smoke-tests, regression-tests ]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download smoke results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-smoke
+          path: target/allure-results
+        continue-on-error: true
+
+      - name: Download regression results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-regression
+          path: target/allure-results
+        continue-on-error: true
+
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@v1.9
+        with:
+          allure_results: target/allure-results
+          allure_report: target/allure-report
+          allure_history: allure-history
+
+      - name: Publish Allure report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: target/allure-report

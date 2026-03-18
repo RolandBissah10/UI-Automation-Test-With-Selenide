@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  # Run all tests
+  tests-all:
+    build: .
+    container_name: swag-labs-all-tests
+    volumes:
+      - ./target:/app/target
+    command: >
+      mvn test -Pall -Dbrowser=chrome -Dheadless=true
+      -Dwebdriver.chrome.driver=/usr/bin/chromedriver -B
+
+  # Run smoke suite only
+  tests-smoke:
+    build: .
+    container_name: swag-labs-smoke-tests
+    volumes:
+      - ./target:/app/target
+    command: >
+      mvn test -Psmoke -Dbrowser=chrome -Dheadless=true
+      -Dwebdriver.chrome.driver=/usr/bin/chromedriver -B
+
+  # Run regression suite only
+  tests-regression:
+    build: .
+    container_name: swag-labs-regression-tests
+    volumes:
+      - ./target:/app/target
+    command: >
+      mvn test -Pregression -Dbrowser=chrome -Dheadless=true
+      -Dwebdriver.chrome.driver=/usr/bin/chromedriver -B
+
+  # Allure report server (run after tests)
+  allure-report:
+    image: frankescobar/allure-docker-service:latest
+    container_name: allure-report
+    environment:
+      CHECK_RESULTS_EVERY_SECONDS: 3
+      KEEP_HISTORY: 1
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./target/allure-results:/app/allure-results
+      - ./target/allure-reports:/app/default-reports
+    depends_on:
+      - tests-all
