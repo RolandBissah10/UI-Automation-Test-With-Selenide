@@ -8,12 +8,13 @@ import static com.codeborne.selenide.Selenide.$;
 
 public class ProductDetailsPage {
 
-    private final SelenideElement productName    = $(".inventory_details_name");
-    private final SelenideElement productDesc    = $(".inventory_details_desc");
-    private final SelenideElement productPrice   = $(".inventory_details_price");
-    private final SelenideElement addToCartBtn   = $("[data-test^='add-to-cart']");
-    private final SelenideElement removeBtn      = $("[data-test^='remove']");
-    private final SelenideElement backButton     = $("[data-test='back-to-products']");
+    private final SelenideElement productName  = $(".inventory_details_name");
+    private final SelenideElement productDesc  = $(".inventory_details_desc");
+    private final SelenideElement productPrice = $(".inventory_details_price");
+    // The add-to-cart button on the details page has a specific data-test like
+    // "add-to-cart-sauce-labs-backpack" — use a broader selector
+    private final SelenideElement addToCartBtn = $(".btn_inventory");
+    private final SelenideElement backButton   = $("[data-test='back-to-products']");
 
     @Step("Verify product details page is loaded")
     public ProductDetailsPage shouldBeLoaded() {
@@ -29,15 +30,18 @@ public class ProductDetailsPage {
         return this;
     }
 
-    @Step("Verify 'Remove' button is visible")
+    @Step("Verify 'Remove' button is visible after adding to cart")
     public ProductDetailsPage shouldShowRemoveButton() {
-        removeBtn.shouldBe(visible);
+        // After clicking add-to-cart the button text changes to "Remove"
+        addToCartBtn.shouldBe(visible).shouldHave(text("Remove"));
         return this;
     }
 
     @Step("Go back to products")
     public ProductsPage goBackToProducts() {
-        backButton.click();
+        backButton.shouldBe(visible).click();
+        // Wait for products page title to confirm navigation completed
+        $("[data-test='title']").shouldBe(visible);
         return new ProductsPage();
     }
 

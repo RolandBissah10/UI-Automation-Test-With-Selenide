@@ -11,16 +11,15 @@ import static com.codeborne.selenide.Selenide.*;
 public class ProductsPage {
 
     // Locators
-    private final SelenideElement pageTitle       = $(".title");
-    private final SelenideElement menuButton      = $("#react-burger-menu-btn");
-    private final SelenideElement logoutLink      = $("#logout_sidebar_link");
-    private final SelenideElement sortDropdown    = $("[data-test='product-sort-container']");
-    private final SelenideElement cartIcon        = $(".shopping_cart_link");
-    private final SelenideElement cartBadge       = $(".shopping_cart_badge");
-    private final ElementsCollection productCards = $$(".inventory_item");
-    private final ElementsCollection productNames = $$(".inventory_item_name");
+    private final SelenideElement pageTitle        = $("[data-test='title']");
+    private final SelenideElement menuButton       = $("#react-burger-menu-btn");
+    private final SelenideElement logoutLink       = $("#logout_sidebar_link");
+    private final SelenideElement sortDropdown     = $("[data-test='product-sort-container']");
+    private final SelenideElement cartIcon         = $(".shopping_cart_link");
+    private final SelenideElement cartBadge        = $(".shopping_cart_badge");
+    private final ElementsCollection productCards  = $$(".inventory_item");
+    private final ElementsCollection productNames  = $$(".inventory_item_name");
     private final ElementsCollection addToCartBtns = $$("[data-test^='add-to-cart']");
-    private final ElementsCollection prices       = $$(".inventory_item_price");
 
     @Step("Verify products page is loaded")
     public ProductsPage shouldBeLoaded() {
@@ -32,9 +31,9 @@ public class ProductsPage {
     @Step("Add product by name: {productName}")
     public ProductsPage addProductToCart(String productName) {
         productNames.findBy(text(productName))
-                    .parent().parent()
-                    .$("[data-test^='add-to-cart']")
-                    .click();
+                .parent().parent()
+                .$("[data-test^='add-to-cart']")
+                .click();
         return this;
     }
 
@@ -65,7 +64,8 @@ public class ProductsPage {
     @Step("Logout")
     public LoginPage logout() {
         menuButton.click();
-        logoutLink.shouldBe(visible).click();
+        // Wait for slide-in animation to complete before interacting
+        logoutLink.shouldBe(visible, enabled).click();
         return new LoginPage();
     }
 
