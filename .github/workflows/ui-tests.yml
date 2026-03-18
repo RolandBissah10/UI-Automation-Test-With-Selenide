@@ -44,13 +44,23 @@ jobs:
         uses: browser-actions/setup-chrome@v1
 
       - name: Run smoke tests
+        # -e = full stack traces, -fae = run all tests even if some fail
         run: |
           mvn test -Psmoke \
             -Dbrowser=chrome \
             -Dheadless=true \
+            -e -fae \
             -B --no-transfer-progress
 
-      - name: Upload Allure results
+      - name: Upload surefire reports (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-smoke
+          path: target/surefire-reports
+          retention-days: 7
+
+      - name: Upload Allure results (always)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -58,11 +68,11 @@ jobs:
           path: target/allure-results
           retention-days: 7
 
-      - name: Upload screenshots on failure
-        if: failure()
+      - name: Upload screenshots (always)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: screenshots-smoke-failure
+          name: screenshots-smoke
           path: target/selenide-screenshots
           retention-days: 7
 
@@ -93,9 +103,18 @@ jobs:
           mvn test -Pregression \
             -Dbrowser=${{ github.event.inputs.browser || 'chrome' }} \
             -Dheadless=true \
+            -e -fae \
             -B --no-transfer-progress
 
-      - name: Upload Allure results
+      - name: Upload surefire reports (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-regression
+          path: target/surefire-reports
+          retention-days: 14
+
+      - name: Upload Allure results (always)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -103,11 +122,11 @@ jobs:
           path: target/allure-results
           retention-days: 14
 
-      - name: Upload screenshots on failure
-        if: failure()
+      - name: Upload screenshots (always)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: screenshots-regression-failure
+          name: screenshots-regression
           path: target/selenide-screenshots
           retention-days: 14
 
@@ -117,15 +136,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ smoke-tests, regression-tests ]
     if: always()
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: temurin
 
       - name: Download smoke results
         uses: actions/download-artifact@v4
