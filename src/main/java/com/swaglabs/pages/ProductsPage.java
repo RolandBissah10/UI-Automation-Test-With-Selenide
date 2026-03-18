@@ -12,7 +12,6 @@ public class ProductsPage {
 
     private final SelenideElement pageTitle        = $("span.title");
     private final SelenideElement menuButton       = $("#react-burger-menu-btn");
-    private final SelenideElement menuContainer    = $(".bm-menu-wrap");
     private final SelenideElement logoutLink       = $("#logout_sidebar_link");
     private final SelenideElement sortDropdown     = $("[data-test='product-sort-container']");
     private final SelenideElement cartIcon         = $(".shopping_cart_link");
@@ -30,8 +29,6 @@ public class ProductsPage {
 
     @Step("Add product to cart: {productName}")
     public ProductsPage addProductToCart(String productName) {
-        // Build the data-test value from product name:
-        // "Sauce Labs Backpack" -> "add-to-cart-sauce-labs-backpack"
         String dataTest = "add-to-cart-" + productName.toLowerCase()
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("-+", "-")
@@ -66,9 +63,12 @@ public class ProductsPage {
 
     @Step("Logout")
     public LoginPage logout() {
-        menuButton.shouldBe(visible).click();
-        menuContainer.shouldHave(attribute("aria-hidden", "false"));
-        logoutLink.shouldBe(visible).click();
+        // Use JavaScript click — the burger menu button has pointer-events
+        // issues in headless Chrome that prevent normal Selenide clicks
+        executeJavaScript("document.getElementById('react-burger-menu-btn').click()");
+        // Wait for the logout link to become visible in the DOM (not aria-based)
+        logoutLink.shouldBe(visible);
+        logoutLink.click();
         return new LoginPage();
     }
 
