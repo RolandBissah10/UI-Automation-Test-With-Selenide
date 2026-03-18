@@ -1,20 +1,19 @@
 package com.swaglabs.pages;
 
+import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import io.qameta.allure.Step;
 
-import com.codeborne.selenide.Selenide;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
 
 public class LoginPage {
 
-    // Locators
-    private final SelenideElement usernameInput   = $("#user-name");
-    private final SelenideElement passwordInput   = $("#password");
-    private final SelenideElement loginButton     = $("#login-button");
-    private final SelenideElement errorMessage    = $("[data-test='error']");
-    private final SelenideElement errorIcon       = $(".error-button");
+    private final SelenideElement usernameInput = $("#user-name");
+    private final SelenideElement passwordInput = $("#password");
+    private final SelenideElement loginButton   = $("#login-button");
+    private final SelenideElement errorMessage  = $("[data-test='error']");
+    private final SelenideElement errorIcon     = $(".error-button");
 
     @Step("Open login page")
     public LoginPage openPage() {
@@ -60,7 +59,6 @@ public class LoginPage {
         return clickLoginExpectingError();
     }
 
-    // Assertions
     @Step("Verify error message is displayed")
     public LoginPage shouldHaveError(String expectedMessage) {
         errorMessage.shouldBe(visible).shouldHave(text(expectedMessage));
@@ -69,6 +67,8 @@ public class LoginPage {
 
     @Step("Verify login page is loaded")
     public LoginPage shouldBeLoaded() {
+        // Wait for URL to confirm we are on the login page before asserting elements
+        webdriver().shouldHave(com.codeborne.selenide.WebDriverConditions.urlContaining("saucedemo.com"));
         loginButton.shouldBe(visible);
         usernameInput.shouldBe(visible);
         passwordInput.shouldBe(visible);
