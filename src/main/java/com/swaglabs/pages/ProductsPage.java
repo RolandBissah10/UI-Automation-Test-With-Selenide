@@ -7,6 +7,7 @@ import io.qameta.allure.Step;
 import static com.codeborne.selenide.CollectionCondition.*;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.WebDriverConditions.urlContaining;
 
 public class ProductsPage {
 
@@ -45,7 +46,10 @@ public class ProductsPage {
 
     @Step("Open product details: {productName}")
     public ProductDetailsPage openProduct(String productName) {
-        productNames.findBy(text(productName)).click();
+        SelenideElement link = productNames.findBy(text(productName)).shouldBe(visible);
+        // Use JS click — headless Chrome sometimes swallows regular clicks on anchor-wrapped elements
+        executeJavaScript("arguments[0].click()", link);
+        webdriver().shouldHave(urlContaining("inventory-item"));
         return new ProductDetailsPage();
     }
 
@@ -63,12 +67,11 @@ public class ProductsPage {
 
     @Step("Logout")
     public LoginPage logout() {
-        // Use JavaScript click — the burger menu button has pointer-events
-        // issues in headless Chrome that prevent normal Selenide clicks
         executeJavaScript("document.getElementById('react-burger-menu-btn').click()");
-        // Wait for the logout link to become visible in the DOM (not aria-based)
         logoutLink.shouldBe(visible);
-        logoutLink.click();
+        executeJavaScript("document.getElementById('logout_sidebar_link').click()");
+        webdriver().shouldHave(urlContaining("saucedemo.com"));
+        $("[data-test='login-button']").shouldBe(visible);
         return new LoginPage();
     }
 

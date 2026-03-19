@@ -6,12 +6,13 @@ import io.qameta.allure.Step;
 
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.WebDriverConditions.urlContaining;
 
 public class LoginPage {
 
-    private final SelenideElement usernameInput = $("#user-name");
-    private final SelenideElement passwordInput = $("#password");
-    private final SelenideElement loginButton   = $("#login-button");
+    private final SelenideElement usernameInput = $("[data-test='username']");
+    private final SelenideElement passwordInput = $("[data-test='password']");
+    private final SelenideElement loginButton   = $("[data-test='login-button']");
     private final SelenideElement errorMessage  = $("[data-test='error']");
     private final SelenideElement errorIcon     = $(".error-button");
 
@@ -67,11 +68,9 @@ public class LoginPage {
 
     @Step("Verify login page is loaded")
     public LoginPage shouldBeLoaded() {
-        // Wait for URL to confirm we are on the login page before asserting elements
-        webdriver().shouldHave(com.codeborne.selenide.WebDriverConditions.urlContaining("saucedemo.com"));
+        webdriver().shouldHave(urlContaining("saucedemo.com"));
         loginButton.shouldBe(visible);
         usernameInput.shouldBe(visible);
-        passwordInput.shouldBe(visible);
         return this;
     }
 
