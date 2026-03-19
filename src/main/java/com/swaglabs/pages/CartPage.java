@@ -40,10 +40,7 @@ public class CartPage {
         return this;
     }
 
-    /**
-     * Removes an item from the cart using its data-test remove button.
-     * Cart remove buttons follow the pattern: "remove-sauce-labs-backpack"
-     */
+
     @Step("Remove item from cart: {itemName}")
     public CartPage removeItem(String itemName) {
         String dataTest = "remove-" + itemName.toLowerCase()
