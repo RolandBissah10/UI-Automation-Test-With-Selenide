@@ -1,6 +1,7 @@
 package com.swaglab.regression;
 
 import com.swaglab.base.BaseTest;
+import com.swaglab.data.TestData;
 import com.swaglabs.pages.CheckoutPage;
 import com.swaglabs.pages.LoginPage;
 import io.qameta.allure.*;
@@ -18,8 +19,8 @@ public class CheckoutTest extends BaseTest {
     void loginAndAddItem() {
         new LoginPage()
                 .loginAs(CONFIG.standardUser(), CONFIG.password())
-                .addProductToCart("Sauce Labs Backpack")
-                .addProductToCart("Sauce Labs Bike Light");
+                .addProductToCart(TestData.PRODUCT_BACKPACK)
+                .addProductToCart(TestData.PRODUCT_BIKE_LIGHT);
     }
 
     @Test
@@ -31,7 +32,7 @@ public class CheckoutTest extends BaseTest {
                 .openCart()
                 .proceedToCheckout()
                 .shouldBeOnStepOne()
-                .fillInfo("John", "Doe", "12345")
+                .fillInfo(TestData.FIRST_NAME_JOHN, TestData.LAST_NAME_DOE, TestData.ZIP_DEFAULT)
                 .continueToOverview()
                 .shouldBeOnStepTwo()
                 .finishCheckout()
@@ -46,9 +47,9 @@ public class CheckoutTest extends BaseTest {
         new com.swaglabs.pages.ProductsPage()
                 .openCart()
                 .proceedToCheckout()
-                .fillInfo("", "Doe", "12345")
+                .fillInfo("", TestData.LAST_NAME_DOE, TestData.ZIP_DEFAULT)
                 .continueToOverview()
-                .shouldHaveError("Error: First Name is required");
+                .shouldHaveError(TestData.ERROR_FIRST_NAME_REQUIRED);
     }
 
     @Test
@@ -58,9 +59,9 @@ public class CheckoutTest extends BaseTest {
         new com.swaglabs.pages.ProductsPage()
                 .openCart()
                 .proceedToCheckout()
-                .fillInfo("John", "", "12345")
+                .fillInfo(TestData.FIRST_NAME_JOHN, "", TestData.ZIP_DEFAULT)
                 .continueToOverview()
-                .shouldHaveError("Error: Last Name is required");
+                .shouldHaveError(TestData.ERROR_LAST_NAME_REQUIRED);
     }
 
     @Test
@@ -70,9 +71,9 @@ public class CheckoutTest extends BaseTest {
         new com.swaglabs.pages.ProductsPage()
                 .openCart()
                 .proceedToCheckout()
-                .fillInfo("John", "Doe", "")
+                .fillInfo(TestData.FIRST_NAME_JOHN, TestData.LAST_NAME_DOE, "")
                 .continueToOverview()
-                .shouldHaveError("Error: Postal Code is required");
+                .shouldHaveError(TestData.ERROR_POSTAL_CODE_REQUIRED);
     }
 
     @Test
@@ -94,7 +95,7 @@ public class CheckoutTest extends BaseTest {
         new com.swaglabs.pages.ProductsPage()
                 .openCart()
                 .proceedToCheckout()
-                .fillInfo("Jane", "Smith", "90210")
+                .fillInfo(TestData.FIRST_NAME_JANE, TestData.LAST_NAME_SMITH, TestData.ZIP_BEVERLY_HILLS)
                 .continueToOverview()
                 .finishCheckout()
                 .shouldShowConfirmation()

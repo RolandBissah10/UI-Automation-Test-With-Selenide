@@ -83,4 +83,48 @@ public class LoginPage {
     public String getErrorMessage() {
         return errorMessage.shouldBe(visible).getText();
     }
+
+    @Step("Clear username field")
+    public LoginPage clearUsernameField() {
+        usernameInput.shouldBe(visible).clear();
+        return this;
+    }
+
+    @Step("Clear password field")
+    public LoginPage clearPasswordField() {
+        passwordInput.shouldBe(visible).clear();
+        return this;
+    }
+
+    @Step("Click login button (expecting error)")
+    public LoginPage clickLoginButton() {
+        loginButton.click();
+        return this;
+    }
+
+    @Step("Clear error message by clicking X button")
+    public LoginPage clearError() {
+        errorIcon.shouldBe(visible).click();
+        errorMessage.shouldBe(hidden);
+        return this;
+    }
+
+    @Step("Close error message by clicking X button")
+    public LoginPage closeErrorMessage() {
+        errorIcon.shouldBe(visible).click();
+        errorMessage.shouldBe(hidden);
+        return this;
+    }
+
+    @Step("Verify no error message is displayed")
+    public LoginPage shouldNotHaveError() {
+        errorMessage.shouldBe(hidden);
+        return this;
+    }
+
+    @Step("Verify username field is highlighted with error")
+    public LoginPage shouldHighlightUsernameField() {
+        usernameInput.shouldHave(cssClass("error"));
+        return this;
+    }
 }

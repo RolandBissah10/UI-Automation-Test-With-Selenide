@@ -7,6 +7,7 @@ import io.qameta.allure.Step;
 import static com.codeborne.selenide.CollectionCondition.*;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.WebDriverConditions.urlContaining;
 
 public class CartPage {
 
@@ -54,6 +55,11 @@ public class CartPage {
     @Step("Proceed to checkout")
     public CheckoutPage proceedToCheckout() {
         checkoutBtn.shouldBe(visible).click();
+        // Fallback for flaky checkout button
+        if (webdriver().driver().url().contains("cart")) {
+            executeJavaScript("arguments[0].click()", checkoutBtn);
+        }
+        webdriver().shouldHave(urlContaining("checkout-step-one"));
         return new CheckoutPage();
     }
 
@@ -65,5 +71,29 @@ public class CartPage {
 
     public int getCartItemCount() {
         return cartItems.size();
+    }
+
+    @Step("Verify cart page header is visible")
+    public CartPage shouldHaveCartHeader() {
+        pageTitle.shouldBe(visible).shouldHave(text("Your Cart"));
+        return this;
+    }
+
+    @Step("Verify cart has items")
+    public CartPage shouldHaveCartItems() {
+        cartItems.shouldHave(sizeGreaterThan(0));
+        return this;
+    }
+
+    @Step("Verify Continue Shopping button is visible")
+    public CartPage shouldHaveContinueShoppingButton() {
+        continueBtn.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify Checkout button is visible")
+    public CartPage shouldHaveCheckoutButton() {
+        checkoutBtn.shouldBe(visible);
+        return this;
     }
 }

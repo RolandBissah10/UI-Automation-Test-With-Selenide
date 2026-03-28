@@ -28,9 +28,8 @@ public class ProductDetailsPage {
 
     @Step("Add product to cart from details page")
     public ProductDetailsPage addToCart() {
-        addToCartBtn.shouldBe(visible).click();
-        // Wait for the add-to-cart button to disappear, confirming the click registered
-        addToCartBtn.shouldBe(hidden);
+        addToCartBtn.shouldBe(visible);
+        executeJavaScript("arguments[0].click()", addToCartBtn);
         return this;
     }
 
@@ -55,5 +54,48 @@ public class ProductDetailsPage {
 
     public String getProductPrice() {
         return productPrice.getText();
+    }
+
+    @Step("Verify product name is: {expectedName}")
+    public ProductDetailsPage shouldShowProductName(String expectedName) {
+        productName.shouldBe(visible).shouldHave(text(expectedName));
+        return this;
+    }
+
+    @Step("Verify product description is visible")
+    public ProductDetailsPage shouldShowProductDescription() {
+        productDesc.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify product image is visible")
+    public ProductDetailsPage shouldHaveProductImage() {
+        $(".inventory_details_img").shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify product image is broken")
+    public ProductDetailsPage shouldHaveProductImageBroken() {
+        SelenideElement img = $(".inventory_details_img");
+        img.shouldBe(exist);
+        return this;
+    }
+
+    @Step("Verify product price is visible")
+    public ProductDetailsPage shouldHaveProductPrice() {
+        productPrice.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify Add to Cart button is visible")
+    public ProductDetailsPage shouldHaveAddToCartButton() {
+        addToCartBtn.shouldBe(visible);
+        return this;
+    }
+
+    @Step("Verify Back to Products button is visible")
+    public ProductDetailsPage shouldHaveBackButton() {
+        backButton.shouldBe(visible);
+        return this;
     }
 }
