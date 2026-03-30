@@ -36,13 +36,28 @@ public class ProductsPage {
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("-+", "-")
                 .replaceAll("^-|-$", "");
+        String removeDataTest = "remove-" + dataTest.replace("add-to-cart-", "");
+
         $("[data-test='" + dataTest + "']").shouldBe(visible).click();
+
+        // Wait for the button to flip to "Remove" — confirms the add actually registered
+        // This is the key fix: without this, shouldHaveCartCount runs before the DOM updates on CI
+        $("[data-test='" + removeDataTest + "']").shouldBe(visible);
         return this;
     }
 
     @Step("Add first product to cart")
     public ProductsPage addFirstProductToCart() {
-        addToCartBtns.first().shouldBe(visible).click();
+        SelenideElement btn = addToCartBtns.first().shouldBe(visible);
+        // Derive the expected remove button from the add button's data-test attribute
+        String addDataTest = btn.getAttribute("data-test");
+        String removeDataTest = addDataTest != null
+                ? addDataTest.replace("add-to-cart-", "remove-")
+                : null;
+        btn.click();
+        if (removeDataTest != null) {
+            $("[data-test='" + removeDataTest + "']").shouldBe(visible);
+        }
         return this;
     }
 
@@ -78,6 +93,10 @@ public class ProductsPage {
     @Step("Open hamburger menu")
     public MenuPage openMenu() {
         $("#react-burger-menu-btn").shouldBe(visible).click();
+        // Wait for the slide-open animation to complete before checking child links.
+        // The menu wrapper becomes aria-hidden=false and gets display:block only after
+        // the CSS transition finishes — on CI this takes measurably longer than locally.
+        $(".bm-menu-wrap").shouldNotHave(attribute("aria-hidden", "true"));
         $("#inventory_sidebar_link").shouldBe(visible);
         return new MenuPage();
     }

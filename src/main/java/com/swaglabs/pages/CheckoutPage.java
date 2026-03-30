@@ -9,11 +9,8 @@ import static com.codeborne.selenide.WebDriverConditions.urlContaining;
 
 public class CheckoutPage {
 
-    // Use span.title (the actual element) and data-test attributes throughout
     private final SelenideElement pageTitle       = $("span.title");
 
-    // Step One — Customer Info
-    // Select fields by data-test to match current Swag Labs checkout form
     private final SelenideElement firstNameInput  = $("[data-test='firstName']");
     private final SelenideElement lastNameInput   = $("[data-test='lastName']");
     private final SelenideElement postalCodeInput = $("[data-test='postalCode']");
@@ -21,12 +18,10 @@ public class CheckoutPage {
     private final SelenideElement cancelBtn       = $("[data-test='cancel']");
     private final SelenideElement errorMessage    = $("[data-test='error']");
 
-    // Step Two — Overview
     private final SelenideElement finishBtn       = $("[data-test='finish']");
     private final SelenideElement totalAmount     = $(".summary_total_label");
     private final SelenideElement itemTotal       = $(".summary_subtotal_label");
 
-    // Confirmation
     private final SelenideElement confirmHeader   = $(".complete-header");
     private final SelenideElement confirmText     = $(".complete-text");
     private final SelenideElement backHomeBtn     = $("[data-test='back-to-products']");
@@ -40,23 +35,28 @@ public class CheckoutPage {
 
     @Step("Fill checkout information")
     public CheckoutPage fillInfo(String firstName, String lastName, String postalCode) {
+        // Each field is handled atomically: focus → clear → type → assert.
+        // Previously all three fields were cleared first and then filled separately.
+        // On CI, React's blur/change handlers can reset a previously cleared field
+        // before the value is re-entered, leaving it empty. Handling each field
+        // completely before moving to the next prevents this.
+
         firstNameInput.shouldBe(visible).shouldBe(enabled).click();
         firstNameInput.clear();
-        lastNameInput.shouldBe(visible).shouldBe(enabled).click();
-        lastNameInput.clear();
-        postalCodeInput.shouldBe(visible).shouldBe(enabled).click();
-        postalCodeInput.clear();
-
         if (firstName != null && !firstName.isEmpty()) {
             firstNameInput.setValue(firstName);
             firstNameInput.shouldHave(value(firstName));
         }
 
+        lastNameInput.shouldBe(visible).shouldBe(enabled).click();
+        lastNameInput.clear();
         if (lastName != null && !lastName.isEmpty()) {
             lastNameInput.setValue(lastName);
             lastNameInput.shouldHave(value(lastName));
         }
 
+        postalCodeInput.shouldBe(visible).shouldBe(enabled).click();
+        postalCodeInput.clear();
         if (postalCode != null && !postalCode.isEmpty()) {
             postalCodeInput.setValue(postalCode);
             postalCodeInput.shouldHave(value(postalCode));
@@ -68,8 +68,6 @@ public class CheckoutPage {
     @Step("Continue to order overview")
     public CheckoutPage continueToOverview() {
         continueBtn.shouldBe(visible).shouldBe(enabled).click();
-
-        // Wait a moment for either the overview page or validation error to appear.
         sleep(500);
         if (webdriver().driver().url().contains("checkout-step-one") && !errorMessage.is(visible)) {
             executeJavaScript("arguments[0].click()", continueBtn.getWrappedElement());
@@ -80,7 +78,7 @@ public class CheckoutPage {
     @Step("Attempt to continue to overview (expecting failure)")
     public CheckoutPage continueToOverviewExpectingFailure() {
         continueBtn.shouldBe(visible).click();
-        webdriver().shouldHave(urlContaining("checkout-step-one")); // assert it stays
+        webdriver().shouldHave(urlContaining("checkout-step-one"));
         return this;
     }
 
@@ -94,7 +92,6 @@ public class CheckoutPage {
     @Step("Finish checkout")
     public CheckoutPage finishCheckout() {
         finishBtn.shouldBe(visible).shouldBe(enabled).click();
-        // Fallback for flaky finish button
         if (webdriver().driver().url().contains("checkout-step-two")) {
             sleep(500);
             executeJavaScript("arguments[0].click()", finishBtn.getWrappedElement());
@@ -113,7 +110,6 @@ public class CheckoutPage {
 
     @Step("Verify error: {expectedError}")
     public CheckoutPage shouldHaveError(String expectedError) {
-        // Error stays on step-one page — assert URL hasn't changed
         webdriver().shouldHave(urlContaining("checkout-step-one"));
         errorMessage.shouldBe(visible).shouldHave(text(expectedError));
         return this;
@@ -144,7 +140,7 @@ public class CheckoutPage {
     @Step("Attempt to cancel checkout (expecting failure)")
     public CheckoutPage cancelCheckoutExpectingFailure() {
         cancelBtn.shouldBe(visible).click();
-        webdriver().shouldHave(urlContaining("checkout-step-one")); // assert it stays
+        webdriver().shouldHave(urlContaining("checkout-step-one"));
         return this;
     }
 
