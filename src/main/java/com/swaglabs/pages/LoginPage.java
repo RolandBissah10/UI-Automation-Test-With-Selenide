@@ -36,13 +36,13 @@ public class LoginPage {
 
     @Step("Click login button")
     public ProductsPage clickLogin() {
-        loginButton.click();
-        return new ProductsPage();
+        loginButton.shouldBe(visible).shouldBe(enabled).click();
+        return new ProductsPage().shouldBeLoaded();
     }
 
     @Step("Login with invalid credentials")
     public LoginPage clickLoginExpectingError() {
-        loginButton.click();
+        loginButton.shouldBe(visible).shouldBe(enabled).click();
         return this;
     }
 

@@ -42,9 +42,7 @@ public class MenuPage {
     @Step("Click Logout from menu")
     public LoginPage clickLogout() {
         logoutLink.shouldBe(visible).click();
-        webdriver().shouldHave(urlContaining("saucedemo.com"));
-        $("[data-test='login-button']").shouldBe(visible);
-        return new LoginPage();
+        return new LoginPage().shouldBeLoaded();
     }
 
     @Step("Close menu")

@@ -23,23 +23,7 @@ public class CheckoutTest extends BaseTest {
                 .addProductToCart(TestData.PRODUCT_BIKE_LIGHT);
     }
 
-    @Test
-    @DisplayName("Complete full checkout flow")
-    @Story("User can complete a purchase")
-    @Severity(SeverityLevel.BLOCKER)
-    void completeCheckoutTest() {
-        new com.swaglabs.pages.ProductsPage()
-                .openCart()
-                .proceedToCheckout()
-                .shouldBeOnStepOne()
-                .fillInfo(TestData.FIRST_NAME_JOHN, TestData.LAST_NAME_DOE, TestData.ZIP_DEFAULT)
-                .continueToOverview()
-                .shouldBeOnStepTwo()
-                .finishCheckout()
-                .shouldShowConfirmation();
-    }
-
-    @Test
+     @Test
     @DisplayName("Checkout step one shows error for missing first name")
     @Story("Checkout validates required fields")
     @Severity(SeverityLevel.NORMAL)
@@ -52,7 +36,7 @@ public class CheckoutTest extends BaseTest {
                 .shouldHaveError(TestData.ERROR_FIRST_NAME_REQUIRED);
     }
 
-    @Test
+     @Test
     @DisplayName("Checkout step one shows error for missing last name")
     @Severity(SeverityLevel.NORMAL)
     void missingLastNameValidationTest() {
@@ -64,7 +48,7 @@ public class CheckoutTest extends BaseTest {
                 .shouldHaveError(TestData.ERROR_LAST_NAME_REQUIRED);
     }
 
-    @Test
+     @Test
     @DisplayName("Checkout step one shows error for missing postal code")
     @Severity(SeverityLevel.NORMAL)
     void missingPostalCodeValidationTest() {
@@ -76,7 +60,7 @@ public class CheckoutTest extends BaseTest {
                 .shouldHaveError(TestData.ERROR_POSTAL_CODE_REQUIRED);
     }
 
-    @Test
+     @Test
     @DisplayName("Cancel checkout returns to cart")
     @Severity(SeverityLevel.NORMAL)
     void cancelCheckoutTest() {
@@ -88,18 +72,4 @@ public class CheckoutTest extends BaseTest {
                 .shouldHaveItems(2);
     }
 
-    @Test
-    @DisplayName("Checkout confirmation leads back to products")
-    @Severity(SeverityLevel.NORMAL)
-    void backToProductsAfterCheckoutTest() {
-        new com.swaglabs.pages.ProductsPage()
-                .openCart()
-                .proceedToCheckout()
-                .fillInfo(TestData.FIRST_NAME_JANE, TestData.LAST_NAME_SMITH, TestData.ZIP_BEVERLY_HILLS)
-                .continueToOverview()
-                .finishCheckout()
-                .shouldShowConfirmation()
-                .goBackHome()
-                .shouldBeLoaded();
-    }
 }

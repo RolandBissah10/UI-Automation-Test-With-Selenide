@@ -23,7 +23,7 @@ public class CartTest extends BaseTest {
                 .loginAs(CONFIG.standardUser(), CONFIG.password());
     }
 
-    @Test
+     @Test
     @DisplayName("Add single item to cart")
     @Story("User can add items to cart")
     @Severity(SeverityLevel.CRITICAL)
@@ -37,7 +37,7 @@ public class CartTest extends BaseTest {
                 .shouldContainItem("Sauce Labs Backpack");
     }
 
-    @Test
+     @Test
     @DisplayName("Add multiple items to cart")
     @Severity(SeverityLevel.CRITICAL)
     void addMultipleItemsToCartTest() {
@@ -51,7 +51,7 @@ public class CartTest extends BaseTest {
                 .shouldContainItem("Sauce Labs Bike Light");
     }
 
-    @Test
+     @Test
     @DisplayName("Remove item from cart")
     @Story("User can remove items from cart")
     @Severity(SeverityLevel.CRITICAL)
@@ -66,7 +66,7 @@ public class CartTest extends BaseTest {
                 .shouldContainItem("Sauce Labs Bike Light");
     }
 
-    @Test
+     @Test
     @DisplayName("Cart is empty by default")
     @Severity(SeverityLevel.NORMAL)
     void cartIsEmptyByDefaultTest() {
@@ -76,7 +76,7 @@ public class CartTest extends BaseTest {
                 .shouldBeEmpty();
     }
 
-    @Test
+     @Test
     @DisplayName("Continue shopping from cart returns to products")
     @Severity(SeverityLevel.NORMAL)
     void continueShoppingTest() {
@@ -88,7 +88,7 @@ public class CartTest extends BaseTest {
                 .shouldBeLoaded();
     }
 
-    @Test
+     @Test
     @DisplayName("Cart persists items after navigating away")
     @Severity(SeverityLevel.NORMAL)
     void cartPersistsAfterNavigationTest() {

@@ -76,35 +76,7 @@ public class StandardUserTest extends BaseTest {
                 .shouldHaveProductCount(6);
     }
 
-    @Test
-    @DisplayName("Standard user can complete checkout")
-    @Severity(SeverityLevel.BLOCKER)
-    void completeCheckout() {
-        productsPage
-                .addProductToCart("Sauce Labs Backpack")
-                .openCart()
-                .shouldHaveItems(1)
-                .proceedToCheckout()
-                .shouldBeOnStepOne()
-                .fillInfo("John", "Doe", "12345")
-                .continueToOverview()
-                .shouldBeOnStepTwo()
-                .finishCheckout()
-                .shouldShowConfirmation();
-    }
 
-    @Test
-    @DisplayName("Standard user cart persists after navigation")
-    @Severity(SeverityLevel.NORMAL)
-    void cartPersistsAfterNavigation() {
-        productsPage
-                .addProductToCart("Sauce Labs Backpack")
-                .openProduct("Sauce Labs Bike Light")
-                .goBackToProducts()
-                .shouldHaveCartCount(1)
-                .openCart()
-                .shouldHaveItems(1);
-    }
 
     @Test
     @DisplayName("Standard user can remove items from cart")

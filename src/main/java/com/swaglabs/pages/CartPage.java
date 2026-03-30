@@ -48,16 +48,22 @@ public class CartPage {
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("-+", "-")
                 .replaceAll("^-|-$", "");
-        $("[data-test='" + dataTest + "']").shouldBe(visible).click();
+        SelenideElement removeBtn = $("[data-test='" + dataTest + "']");
+        removeBtn.shouldBe(visible).click();
+        sleep(500);
+        if (removeBtn.is(visible)) {
+            executeJavaScript("arguments[0].click()", removeBtn.getWrappedElement());
+            sleep(500);
+        }
         return this;
     }
 
     @Step("Proceed to checkout")
     public CheckoutPage proceedToCheckout() {
-        checkoutBtn.shouldBe(visible).click();
+        checkoutBtn.shouldBe(visible).shouldBe(enabled).click();
         // Fallback for flaky checkout button
         if (webdriver().driver().url().contains("cart")) {
-            executeJavaScript("arguments[0].click()", checkoutBtn);
+            executeJavaScript("arguments[0].click()", checkoutBtn.getWrappedElement());
         }
         webdriver().shouldHave(urlContaining("checkout-step-one"));
         return new CheckoutPage();
@@ -66,6 +72,10 @@ public class CartPage {
     @Step("Continue shopping")
     public ProductsPage continueShopping() {
         continueBtn.click();
+        sleep(500);
+        if (webdriver().driver().url().contains("cart")) {
+            executeJavaScript("arguments[0].click()", continueBtn.getWrappedElement());
+        }
         return new ProductsPage();
     }
 

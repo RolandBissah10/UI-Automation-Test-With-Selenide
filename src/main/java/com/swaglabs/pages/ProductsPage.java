@@ -48,7 +48,12 @@ public class ProductsPage {
 
     @Step("Open product details: {productName}")
     public ProductDetailsPage openProduct(String productName) {
-        productNames.findBy(text(productName)).shouldBe(visible).click();
+        SelenideElement link = productNames.findBy(text(productName)).shouldBe(visible);
+        link.click();
+        sleep(500);
+        if (!webdriver().driver().url().contains("inventory-item")) {
+            executeJavaScript("arguments[0].click()", link.getWrappedElement());
+        }
         webdriver().shouldHave(urlContaining("inventory-item"));
         return new ProductDetailsPage();
     }
@@ -62,6 +67,10 @@ public class ProductsPage {
     @Step("Open cart")
     public CartPage openCart() {
         cartIcon.shouldBe(visible).click();
+        if (!webdriver().driver().url().contains("cart")) {
+            sleep(500);
+            executeJavaScript("arguments[0].click()", cartIcon.getWrappedElement());
+        }
         webdriver().shouldHave(urlContaining("cart"));
         return new CartPage();
     }
@@ -77,9 +86,7 @@ public class ProductsPage {
     public LoginPage logout() {
         openMenu();
         logoutLink.shouldBe(visible).click();
-        webdriver().shouldHave(urlContaining("saucedemo.com"));
-        $("[data-test='login-button']").shouldBe(visible);
-        return new LoginPage();
+        return new LoginPage().shouldBeLoaded();
     }
 
     @Step("Verify cart badge shows {count} item(s)")
@@ -167,11 +174,4 @@ public class ProductsPage {
         return this;
     }
 
-    public int getProductCount() {
-        return productCards.size();
-    }
-
-    public String getFirstProductName() {
-        return productNames.first().getText();
-    }
 }

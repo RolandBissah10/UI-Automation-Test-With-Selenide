@@ -23,7 +23,7 @@
         <allure.junit5.version>2.27.0</allure.junit5.version>
         <slf4j.version>2.0.13</slf4j.version>
         <logback.version>1.5.6</logback.version>
-        <lombok.version>1.18.32</lombok.version>
+        <lombok.version>1.18.44</lombok.version>
         <owner.version>1.0.12</owner.version>
 
         <!-- Plugin versions -->
@@ -128,17 +128,7 @@
                         <headless>${headless}</headless>
                         <base.url>${base.url}</base.url>
                     </systemPropertyVariables>
-                    <argLine>
-                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.22/aspectjweaver-1.9.22.jar"
-                    </argLine>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.aspectj</groupId>
-                        <artifactId>aspectjweaver</artifactId>
-                        <version>1.9.22</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 
             <!-- Allure Maven Plugin -->

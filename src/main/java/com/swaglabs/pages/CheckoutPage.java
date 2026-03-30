@@ -13,10 +13,10 @@ public class CheckoutPage {
     private final SelenideElement pageTitle       = $("span.title");
 
     // Step One — Customer Info
-    // Swag Labs uses ID "first-name", "last-name", "postal-code"
-    private final SelenideElement firstNameInput  = $("#first-name");
-    private final SelenideElement lastNameInput   = $("#last-name");
-    private final SelenideElement postalCodeInput = $("#postal-code");
+    // Select fields by data-test to match current Swag Labs checkout form
+    private final SelenideElement firstNameInput  = $("[data-test='firstName']");
+    private final SelenideElement lastNameInput   = $("[data-test='lastName']");
+    private final SelenideElement postalCodeInput = $("[data-test='postalCode']");
     private final SelenideElement continueBtn     = $("[data-test='continue']");
     private final SelenideElement cancelBtn       = $("[data-test='cancel']");
     private final SelenideElement errorMessage    = $("[data-test='error']");
@@ -40,20 +40,47 @@ public class CheckoutPage {
 
     @Step("Fill checkout information")
     public CheckoutPage fillInfo(String firstName, String lastName, String postalCode) {
-        firstNameInput.shouldBe(visible).setValue(firstName);
-        lastNameInput.shouldBe(visible).setValue(lastName);
-        postalCodeInput.shouldBe(visible).setValue(postalCode);
-        sleep(500); // Allow React to update state
+        firstNameInput.shouldBe(visible).shouldBe(enabled).click();
+        firstNameInput.clear();
+        lastNameInput.shouldBe(visible).shouldBe(enabled).click();
+        lastNameInput.clear();
+        postalCodeInput.shouldBe(visible).shouldBe(enabled).click();
+        postalCodeInput.clear();
+
+        if (firstName != null && !firstName.isEmpty()) {
+            firstNameInput.setValue(firstName);
+            firstNameInput.shouldHave(value(firstName));
+        }
+
+        if (lastName != null && !lastName.isEmpty()) {
+            lastNameInput.setValue(lastName);
+            lastNameInput.shouldHave(value(lastName));
+        }
+
+        if (postalCode != null && !postalCode.isEmpty()) {
+            postalCodeInput.setValue(postalCode);
+            postalCodeInput.shouldHave(value(postalCode));
+        }
+
         return this;
     }
 
     @Step("Continue to order overview")
     public CheckoutPage continueToOverview() {
-        continueBtn.shouldBe(visible).click();
-        // If we are still on step one after click, try JS click (fallback for flaky React)
+        continueBtn.shouldBe(visible).shouldBe(enabled).click();
+
+        // Wait a moment for either the overview page or validation error to appear.
+        sleep(500);
         if (webdriver().driver().url().contains("checkout-step-one") && !errorMessage.is(visible)) {
-            executeJavaScript("arguments[0].click()", continueBtn);
+            executeJavaScript("arguments[0].click()", continueBtn.getWrappedElement());
         }
+        return this;
+    }
+
+    @Step("Attempt to continue to overview (expecting failure)")
+    public CheckoutPage continueToOverviewExpectingFailure() {
+        continueBtn.shouldBe(visible).click();
+        webdriver().shouldHave(urlContaining("checkout-step-one")); // assert it stays
         return this;
     }
 
@@ -66,10 +93,11 @@ public class CheckoutPage {
 
     @Step("Finish checkout")
     public CheckoutPage finishCheckout() {
-        finishBtn.shouldBe(visible).click();
+        finishBtn.shouldBe(visible).shouldBe(enabled).click();
         // Fallback for flaky finish button
         if (webdriver().driver().url().contains("checkout-step-two")) {
-            executeJavaScript("arguments[0].click()", finishBtn);
+            sleep(500);
+            executeJavaScript("arguments[0].click()", finishBtn.getWrappedElement());
         }
         return this;
     }
@@ -106,12 +134,28 @@ public class CheckoutPage {
     @Step("Cancel checkout — returns to cart")
     public CartPage cancelCheckout() {
         cancelBtn.shouldBe(visible).click();
+        sleep(500);
+        if (webdriver().driver().url().contains("checkout-step-one")) {
+            executeJavaScript("arguments[0].click()", cancelBtn.getWrappedElement());
+        }
         return new CartPage();
+    }
+
+    @Step("Attempt to cancel checkout (expecting failure)")
+    public CheckoutPage cancelCheckoutExpectingFailure() {
+        cancelBtn.shouldBe(visible).click();
+        webdriver().shouldHave(urlContaining("checkout-step-one")); // assert it stays
+        return this;
     }
 
     @Step("Go back to cart from checkout")
     public CartPage goBackToCart() {
         return cancelCheckout();
+    }
+
+    @Step("Attempt to go back to cart from checkout (expecting failure)")
+    public CheckoutPage goBackToCartExpectingFailure() {
+        return cancelCheckoutExpectingFailure();
     }
 
     @Step("Go back home after order")

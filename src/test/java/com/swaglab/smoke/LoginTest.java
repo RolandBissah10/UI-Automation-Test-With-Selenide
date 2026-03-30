@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 @Feature("Login")
 public class LoginTest extends BaseTest {
 
-    @Test
+     @Test
     @DisplayName("Successful login with standard user")
     @Story("Valid user can log in")
     @Severity(SeverityLevel.BLOCKER)
@@ -24,7 +24,7 @@ public class LoginTest extends BaseTest {
                 .shouldBeLoaded();
     }
 
-    @Test
+     @Test
     @DisplayName("Login fails with locked out user")
     @Story("Locked user cannot log in")
     @Severity(SeverityLevel.CRITICAL)
@@ -36,7 +36,7 @@ public class LoginTest extends BaseTest {
                 .shouldShowErrorIcon();
     }
 
-    @Test
+     @Test
     @DisplayName("Login fails with wrong password")
     @Story("Invalid credentials show error message")
     @Severity(SeverityLevel.NORMAL)
@@ -46,7 +46,7 @@ public class LoginTest extends BaseTest {
                 .shouldHaveError("Epic sadface: Username and password do not match any user in this service");
     }
 
-    @Test
+     @Test
     @DisplayName("Login fails with empty username")
     @Severity(SeverityLevel.MINOR)
     void emptyUsernameTest() {
@@ -56,7 +56,7 @@ public class LoginTest extends BaseTest {
                 .shouldHaveError("Epic sadface: Username is required");
     }
 
-    @Test
+     @Test
     @DisplayName("Login fails with empty password")
     @Severity(SeverityLevel.MINOR)
     void emptyPasswordTest() {
@@ -66,7 +66,7 @@ public class LoginTest extends BaseTest {
                 .shouldHaveError("Epic sadface: Password is required");
     }
 
-    @Test
+     @Test
     @DisplayName("User can logout successfully")
     @Story("Logged-in user can logout")
     @Severity(SeverityLevel.CRITICAL)

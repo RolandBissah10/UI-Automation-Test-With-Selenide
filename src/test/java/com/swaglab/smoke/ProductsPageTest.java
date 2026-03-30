@@ -23,7 +23,7 @@ public class ProductsPageTest extends BaseTest {
                 .loginAs(CONFIG.standardUser(), CONFIG.password());
     }
 
-    @Test
+     @Test
     @DisplayName("Products page loads with items")
     @Severity(SeverityLevel.BLOCKER)
     void productsPageLoadsTest() {
@@ -32,7 +32,7 @@ public class ProductsPageTest extends BaseTest {
                 .shouldHaveProductCount(6);
     }
 
-    @Test
+     @Test
     @DisplayName("Sort products by price low to high")
     @Story("User can sort products")
     @Severity(SeverityLevel.NORMAL)
@@ -43,7 +43,7 @@ public class ProductsPageTest extends BaseTest {
                 .shouldBeLoaded(); // Products still visible after sort
     }
 
-    @Test
+     @Test
     @DisplayName("Sort products by name Z to A")
     @Severity(SeverityLevel.MINOR)
     void sortByNameZToATest() {
@@ -53,7 +53,7 @@ public class ProductsPageTest extends BaseTest {
                 .shouldBeLoaded();
     }
 
-    @Test
+     @Test
     @DisplayName("Open product details page")
     @Story("User can view product details")
     @Severity(SeverityLevel.CRITICAL)
@@ -64,7 +64,7 @@ public class ProductsPageTest extends BaseTest {
                 .shouldBeLoaded();
     }
 
-    @Test
+     @Test
     @DisplayName("Add product to cart from details page")
     @Severity(SeverityLevel.CRITICAL)
     void addToCartFromDetailsTest() {
@@ -74,7 +74,7 @@ public class ProductsPageTest extends BaseTest {
                 .shouldShowRemoveButton();
     }
 
-    @Test
+     @Test
     @DisplayName("Navigate back to products from details page")
     @Severity(SeverityLevel.NORMAL)
     void navigateBackFromDetailsTest() {
