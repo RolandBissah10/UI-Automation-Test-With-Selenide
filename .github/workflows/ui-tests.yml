@@ -25,33 +25,25 @@ env:
   MAVEN_OPTS: "-Xmx2g"
 
 jobs:
-  # ── Smoke tests — run on every push ──────────────────────────────────────────
+  # ── Smoke tests
   smoke-tests:
     name: "Smoke Tests"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
-
-      - name: Set up Chrome
-        uses: browser-actions/setup-chrome@v1
-
+      - uses: browser-actions/setup-chrome@v1
       - name: Run smoke tests
-        # -e = full stack traces, -fae = run all tests even if some fail
         run: |
           mvn test -Psmoke \
             -Dbrowser=chrome \
             -Dheadless=true \
-            -e -fae \
-            -B --no-transfer-progress
-
+            -e -fae -B --no-transfer-progress
       - name: Upload surefire reports (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,7 +51,6 @@ jobs:
           name: surefire-reports-smoke
           path: target/surefire-reports
           retention-days: 7
-
       - name: Upload Allure results (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -67,7 +58,6 @@ jobs:
           name: allure-results-smoke
           path: target/allure-results
           retention-days: 7
-
       - name: Upload screenshots (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -76,33 +66,25 @@ jobs:
           path: target/selenide-screenshots
           retention-days: 7
 
-  # ── Regression tests — run on PRs and pushes ────────────────────────────────
+  # ── Regression tests
   regression-tests:
     name: "Regression Tests"
     runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || inputs.suite != 'smoke'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: temurin
           cache: maven
-
-      - name: Set up Chrome
-        uses: browser-actions/setup-chrome@v1
-
+      - uses: browser-actions/setup-chrome@v1
       - name: Run regression tests
         run: |
           mvn test -Pregression \
             -Dbrowser=${{ github.event.inputs.browser || 'chrome' }} \
-            -Dheadless=true \
-            -e -fae \
-            -B --no-transfer-progress
-
+            -Dheadless=true -e -fae -B --no-transfer-progress
       - name: Upload surefire reports (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -110,7 +92,6 @@ jobs:
           name: surefire-reports-regression
           path: target/surefire-reports
           retention-days: 14
-
       - name: Upload Allure results (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -118,7 +99,6 @@ jobs:
           name: allure-results-regression
           path: target/allure-results
           retention-days: 14
-
       - name: Upload screenshots (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -127,7 +107,7 @@ jobs:
           path: target/selenide-screenshots
           retention-days: 14
 
-  # ── Allure report generation ─────────────────────────────────────────────────
+  # ── Allure report generation
   generate-report:
     name: "Generate Allure Report"
     runs-on: ubuntu-latest
@@ -136,36 +116,30 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Download smoke results
         uses: actions/download-artifact@v4
         with:
           name: allure-results-smoke
           path: target/allure-results
         continue-on-error: true
-
       - name: Download regression results
         uses: actions/download-artifact@v4
         with:
           name: allure-results-regression
           path: target/allure-results
         continue-on-error: true
-
       - name: Generate Allure report
         run: |
           wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
           tar -zxf allure-2.27.0.tgz
           ./allure-2.27.0/bin/allure generate target/allure-results --clean -o target/allure-report
-
       - name: Upload Allure report as artifact
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: target/allure-report
           retention-days: 30
-
       - name: Publish Allure report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         if: github.ref == 'refs/heads/main'
@@ -173,3 +147,49 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: target/allure-report
+
+  # ── Slack notification
+  notify-slack:
+    name: "Notify Slack"
+    runs-on: ubuntu-latest
+    needs: [ generate-report ]
+    if: always()
+    steps:
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-token: ${{ secrets.SLACK_TOKEN }}
+          text: |
+            :robot_face: *Selenide UI Tests Completed*
+            Repository: ${{ github.repository }}
+            Workflow: ${{ github.workflow }}
+            Branch: ${{ github.ref_name }}
+            Status: ${{ job.status }}
+            :white_check_mark: Smoke Tests & Regression Tests finished.
+            Allure Report: https://<your-gh-pages-url>/allure-report/
+
+  # ── Email notification
+  notify-email:
+    name: "Notify via Email"
+    runs-on: ubuntu-latest
+    needs: [ generate-report ]
+    if: always()
+    steps:
+      - name: Send Test Results Email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Selenide UI Tests - ${{ github.repository }} - ${{ job.status }}"
+          body: |
+            Selenide UI Tests completed on ${{ github.repository }}.
+            Branch: ${{ github.ref_name }}
+            Workflow: ${{ github.workflow }}
+            Status: ${{ job.status }}
+            Check Allure report here: https://<your-gh-pages-url>/allure-report/
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_USER }}
+          secure: true
