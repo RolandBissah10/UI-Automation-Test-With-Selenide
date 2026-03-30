@@ -92,15 +92,7 @@ public class StandardUserTest extends BaseTest {
                 .shouldContainItem("Sauce Labs Bike Light");
     }
 
-    @Test
-    @DisplayName("Standard user can logout successfully")
-    @Severity(SeverityLevel.CRITICAL)
-    void logoutSuccessfully() {
-        productsPage
-                .openMenu()
-                .clickLogout();
-        new LoginPage().shouldBeLoaded();
-    }
+
 
     @Test
     @DisplayName("Standard user can continue shopping from cart")

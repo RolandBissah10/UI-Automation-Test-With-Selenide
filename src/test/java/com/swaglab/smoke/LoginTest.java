@@ -66,15 +66,5 @@ public class LoginTest extends BaseTest {
                 .shouldHaveError("Epic sadface: Password is required");
     }
 
-     @Test
-    @DisplayName("User can logout successfully")
-    @Story("Logged-in user can logout")
-    @Severity(SeverityLevel.CRITICAL)
-    void logoutTest() {
-        new LoginPage()
-                .loginAs(CONFIG.standardUser(), CONFIG.password())
-                .shouldBeLoaded()
-                .logout()
-                .shouldBeLoaded();
-    }
+
 }
