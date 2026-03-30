@@ -150,46 +150,30 @@ jobs:
 
   # ── Slack notification
   notify-slack:
-    name: "Notify Slack"
-    runs-on: ubuntu-latest
-    needs: [ generate-report ]
+    needs: test
     if: always()
-    steps:
-      - name: Send Slack Notification
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          slack-token: ${{ secrets.SLACK_TOKEN }}
-          text: |
-            :robot_face: *Selenide UI Tests Completed*
-            Repository: ${{ github.repository }}
-            Workflow: ${{ github.workflow }}
-            Branch: ${{ github.ref_name }}
-            Status: ${{ job.status }}
-            :white_check_mark: Smoke Tests & Regression Tests finished.
-            Allure Report: https://<your-gh-pages-url>/allure-report/
+    uses: ./.github/workflows/slack-notification.yml
+    secrets: inherit
+    with:
+      status: ${{ needs.test.result }}
+      tests_total: ${{ needs.test.outputs.tests_total }}
+      tests_passed: ${{ needs.test.outputs.tests_passed }}
+      tests_failed: ${{ needs.test.outputs.tests_failed }}
+      tests_skipped: ${{ needs.test.outputs.tests_skipped }}
+      passed_tests: ${{ needs.test.outputs.passed_tests }}
+      failed_tests: ${{ needs.test.outputs.failed_tests }}
 
   # ── Email notification
   notify-email:
-    name: "Notify via Email"
-    runs-on: ubuntu-latest
-    needs: [ generate-report ]
+    needs: test
     if: always()
-    steps:
-      - name: Send Test Results Email
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.EMAIL_USER }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "Selenide UI Tests - ${{ github.repository }} - ${{ job.status }}"
-          body: |
-            Selenide UI Tests completed on ${{ github.repository }}.
-            Branch: ${{ github.ref_name }}
-            Workflow: ${{ github.workflow }}
-            Status: ${{ job.status }}
-            Check Allure report here: https://<your-gh-pages-url>/allure-report/
-          to: ${{ secrets.EMAIL_TO }}
-          from: ${{ secrets.EMAIL_USER }}
-          secure: true
+    uses: ./.github/workflows/email-notification.yml
+    secrets: inherit
+    with:
+      status: ${{ needs.test.result }}
+      tests_total: ${{ needs.test.outputs.tests_total }}
+      tests_passed: ${{ needs.test.outputs.tests_passed }}
+      tests_failed: ${{ needs.test.outputs.tests_failed }}
+      tests_skipped: ${{ needs.test.outputs.tests_skipped }}
+      passed_tests: ${{ needs.test.outputs.passed_tests }}
+      failed_tests: ${{ needs.test.outputs.failed_tests }}
