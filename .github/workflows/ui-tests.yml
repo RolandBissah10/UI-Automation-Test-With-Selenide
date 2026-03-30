@@ -169,6 +169,7 @@ jobs:
             :white_check_mark: Smoke Tests & Regression Tests finished.
             Allure Report: https://<your-gh-pages-url>/allure-report/
 
+
   # ── Email notification
   notify-email:
     name: "Notify via Email"
