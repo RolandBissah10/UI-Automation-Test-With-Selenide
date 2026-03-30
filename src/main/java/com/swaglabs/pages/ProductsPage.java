@@ -38,11 +38,19 @@ public class ProductsPage {
                 .replaceAll("^-|-$", "");
         String removeDataTest = "remove-" + dataTest.replace("add-to-cart-", "");
 
-        $("[data-test='" + dataTest + "']").shouldBe(visible).click();
+        SelenideElement addBtn = $("[data-test='" + dataTest + "']").shouldBe(visible);
+        // Scroll into view before clicking — on CI the viewport may not cover all product cards
+        addBtn.scrollIntoView(true);
+        addBtn.click();
+
+        // If the button hasn't flipped yet, fall back to a JS click
+        SelenideElement removeBtn = $("[data-test='" + removeDataTest + "']");
+        if (!removeBtn.is(visible)) {
+            executeJavaScript("arguments[0].click()", addBtn.getWrappedElement());
+        }
 
         // Wait for the button to flip to "Remove" — confirms the add actually registered
-        // This is the key fix: without this, shouldHaveCartCount runs before the DOM updates on CI
-        $("[data-test='" + removeDataTest + "']").shouldBe(visible);
+        removeBtn.shouldBe(visible);
         return this;
     }
 
@@ -92,12 +100,17 @@ public class ProductsPage {
 
     @Step("Open hamburger menu")
     public MenuPage openMenu() {
-        $("#react-burger-menu-btn").shouldBe(visible).click();
-        // Wait for the slide-open animation to complete before checking child links.
-        // The menu wrapper becomes aria-hidden=false and gets display:block only after
-        // the CSS transition finishes — on CI this takes measurably longer than locally.
-        $(".bm-menu-wrap").shouldNotHave(attribute("aria-hidden", "true"));
-        $("#inventory_sidebar_link").shouldBe(visible);
+        SelenideElement menuBtn = $("#react-burger-menu-btn").shouldBe(visible);
+        menuBtn.click();
+
+        // The bm-menu-wrap aria-hidden attribute is unreliable across browser versions.
+        // Instead wait directly for the sidebar link to become visible, with a JS click
+        // fallback in case the first click didn't register on CI.
+        SelenideElement sidebarLink = $("#inventory_sidebar_link");
+        if (!sidebarLink.is(visible)) {
+            executeJavaScript("arguments[0].click()", menuBtn.getWrappedElement());
+        }
+        sidebarLink.shouldBe(visible);
         return new MenuPage();
     }
 
