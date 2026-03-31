@@ -32,11 +32,12 @@ public class ProductsPage {
 
     @Step("Add product to cart: {productName}")
     public ProductsPage addProductToCart(String productName) {
-        String dataTest = "add-to-cart-" + productName.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("-+", "-")
-                .replaceAll("^-|-$", "");
-        $("[data-test='" + dataTest + "']").shouldBe(visible).click();
+        SelenideElement productCard = productCards.findBy(text(productName));
+        productCard.scrollIntoView(true);
+        SelenideElement addButton = productCard.$("[data-test^='add-to-cart']");
+        addButton.shouldBe(visible, enabled).click();
+        addButton.shouldHave(text("Remove"));
+        cartIcon.$(".shopping_cart_badge").shouldBe(visible);
         return this;
     }
 
@@ -71,8 +72,9 @@ public class ProductsPage {
             sleep(500);
             executeJavaScript("arguments[0].click()", cartIcon.getWrappedElement());
         }
-        webdriver().shouldHave(urlContaining("cart"));
-        return new CartPage();
+        CartPage cartPage = new CartPage();
+        cartPage.shouldBeLoaded();
+        return cartPage;
     }
 
     @Step("Open hamburger menu")
@@ -91,7 +93,9 @@ public class ProductsPage {
 
     @Step("Verify cart badge shows {count} item(s)")
     public ProductsPage shouldHaveCartCount(int count) {
-        cartBadge.shouldBe(visible).shouldHave(text(String.valueOf(count)));
+        cartIcon.$(".shopping_cart_badge")
+                .shouldBe(visible)
+                .shouldHave(text(String.valueOf(count)));
         return this;
     }
 

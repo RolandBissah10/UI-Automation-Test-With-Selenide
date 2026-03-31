@@ -44,17 +44,11 @@ public class CartPage {
 
     @Step("Remove item from cart: {itemName}")
     public CartPage removeItem(String itemName) {
-        String dataTest = "remove-" + itemName.toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("-+", "-")
-                .replaceAll("^-|-$", "");
-        SelenideElement removeBtn = $("[data-test='" + dataTest + "']");
-        removeBtn.shouldBe(visible).click();
-        sleep(500);
-        if (removeBtn.is(visible)) {
-            executeJavaScript("arguments[0].click()", removeBtn.getWrappedElement());
-            sleep(500);
-        }
+        SelenideElement item = cartItems.findBy(text(itemName));
+        item.scrollIntoView(true);
+        SelenideElement removeBtn = item.$("[data-test^='remove-']");
+        removeBtn.shouldBe(visible, enabled).click();
+        item.should(disappear);
         return this;
     }
 
@@ -65,18 +59,16 @@ public class CartPage {
         if (webdriver().driver().url().contains("cart")) {
             executeJavaScript("arguments[0].click()", checkoutBtn.getWrappedElement());
         }
-        webdriver().shouldHave(urlContaining("checkout-step-one"));
-        return new CheckoutPage();
+        return new CheckoutPage().shouldBeOnStepOne();
     }
 
     @Step("Continue shopping")
     public ProductsPage continueShopping() {
-        continueBtn.click();
-        sleep(500);
+        continueBtn.shouldBe(visible, enabled).click();
         if (webdriver().driver().url().contains("cart")) {
             executeJavaScript("arguments[0].click()", continueBtn.getWrappedElement());
         }
-        return new ProductsPage();
+        return new ProductsPage().shouldBeLoaded();
     }
 
     public int getCartItemCount() {

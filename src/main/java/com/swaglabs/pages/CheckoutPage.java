@@ -35,33 +35,20 @@ public class CheckoutPage {
 
     @Step("Fill checkout information")
     public CheckoutPage fillInfo(String firstName, String lastName, String postalCode) {
-        // Each field is handled atomically: focus → clear → type → assert.
-        // Previously all three fields were cleared first and then filled separately.
-        // On CI, React's blur/change handlers can reset a previously cleared field
-        // before the value is re-entered, leaving it empty. Handling each field
-        // completely before moving to the next prevents this.
+        fillField(firstNameInput, firstName);
+        fillField(lastNameInput, lastName);
+        fillField(postalCodeInput, postalCode);
+        return this;
+    }
 
-        firstNameInput.shouldBe(visible).shouldBe(enabled).click();
-        firstNameInput.clear();
-        if (firstName != null && !firstName.isEmpty()) {
-            firstNameInput.setValue(firstName);
-            firstNameInput.shouldHave(value(firstName));
-        }
-
-        lastNameInput.shouldBe(visible).shouldBe(enabled).click();
-        lastNameInput.clear();
-        if (lastName != null && !lastName.isEmpty()) {
-            lastNameInput.setValue(lastName);
-            lastNameInput.shouldHave(value(lastName));
-        }
-
-        postalCodeInput.shouldBe(visible).shouldBe(enabled).click();
-        postalCodeInput.clear();
-        if (postalCode != null && !postalCode.isEmpty()) {
-            postalCodeInput.setValue(postalCode);
-            postalCodeInput.shouldHave(value(postalCode));
-        }
-
+    private CheckoutPage fillField(SelenideElement input, String value) {
+        String normalizedValue = value == null ? "" : value;
+        input.shouldBe(visible, enabled)
+                .scrollIntoView(true)
+                .click();
+        input.clear();
+        input.setValue(normalizedValue);
+        input.shouldHave(value(normalizedValue));
         return this;
     }
 
@@ -78,7 +65,7 @@ public class CheckoutPage {
     @Step("Attempt to continue to overview (expecting failure)")
     public CheckoutPage continueToOverviewExpectingFailure() {
         continueBtn.shouldBe(visible).click();
-        webdriver().shouldHave(urlContaining("checkout-step-one"));
+        errorMessage.shouldBe(visible);
         return this;
     }
 
@@ -134,7 +121,7 @@ public class CheckoutPage {
         if (webdriver().driver().url().contains("checkout-step-one")) {
             executeJavaScript("arguments[0].click()", cancelBtn.getWrappedElement());
         }
-        return new CartPage();
+        return new CartPage().shouldBeLoaded();
     }
 
     @Step("Attempt to cancel checkout (expecting failure)")
