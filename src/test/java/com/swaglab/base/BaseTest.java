@@ -40,6 +40,7 @@ public abstract class BaseTest {
     @BeforeEach
     void openBrowser() {
         Selenide.open(CONFIG.baseUrl());
+        Selenide.clearBrowserCookies();
     }
 
     @AfterEach
@@ -55,7 +56,10 @@ public abstract class BaseTest {
             "--disable-gpu",
             "--window-size=1920,1080",
             "--disable-extensions",
-            "--remote-allow-origins=*"
+            "--remote-allow-origins=*",
+            "--incognito",
+            "--disable-application-cache",
+            "--disable-cache"
         );
         return options;
     }

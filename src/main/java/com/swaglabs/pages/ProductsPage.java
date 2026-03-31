@@ -15,7 +15,7 @@ public class ProductsPage {
     private final SelenideElement logoutLink       = $("#logout_sidebar_link");
     private final SelenideElement sortDropdown     = $("[data-test='product-sort-container']");
     private final SelenideElement cartIcon         = $(".shopping_cart_link");
-    private final SelenideElement cartBadge        = $(".shopping_cart_badge");
+    private final SelenideElement cartBadge        = cartIcon.$("[data-test='shopping-cart-badge'], .shopping_cart_badge");
     private final SelenideElement footer           = $("footer");
     private final ElementsCollection productCards  = $$(".inventory_item");
     private final ElementsCollection productNames  = $$(".inventory_item_name");
@@ -33,10 +33,20 @@ public class ProductsPage {
     @Step("Add product to cart: {productName}")
     public ProductsPage addProductToCart(String productName) {
         SelenideElement productCard = productCards.findBy(text(productName));
-        productCard.scrollIntoView(true);
-        SelenideElement addButton = productCard.$("[data-test^='add-to-cart']");
-        addButton.shouldBe(visible, enabled).click();
-        cartIcon.$(".shopping_cart_badge").shouldBe(visible);
+        productCard.shouldBe(visible).scrollIntoView(true);
+        SelenideElement actionButton = productCard.$("button[data-test^='add-to-cart'], button[data-test^='remove-']");
+        actionButton.shouldBe(visible, enabled);
+
+        String dataTest = actionButton.getAttribute("data-test");
+        if (dataTest != null && dataTest.startsWith("add-to-cart")) {
+            actionButton.click();
+            actionButton.shouldHave(text("Remove"));
+        } else {
+            actionButton.shouldHave(text("Remove"));
+        }
+
+        cartIcon.shouldBe(visible);
+        cartBadge.shouldBe(visible);
         return this;
     }
 
@@ -92,7 +102,7 @@ public class ProductsPage {
 
     @Step("Verify cart badge shows {count} item(s)")
     public ProductsPage shouldHaveCartCount(int count) {
-        cartIcon.$(".shopping_cart_badge")
+        cartBadge
                 .shouldBe(visible)
                 .shouldHave(text(String.valueOf(count)));
         return this;

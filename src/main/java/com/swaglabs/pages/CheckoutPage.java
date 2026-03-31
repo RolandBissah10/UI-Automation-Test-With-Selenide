@@ -48,6 +48,9 @@ public class CheckoutPage {
                 .click();
         input.clear();
         input.setValue(normalizedValue);
+        if (!normalizedValue.equals(input.getValue())) {
+            executeJavaScript("arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", input, normalizedValue);
+        }
         input.shouldHave(value(normalizedValue));
         return this;
     }

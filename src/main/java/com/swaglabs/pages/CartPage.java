@@ -45,10 +45,12 @@ public class CartPage {
     @Step("Remove item from cart: {itemName}")
     public CartPage removeItem(String itemName) {
         SelenideElement item = cartItems.findBy(text(itemName));
-        item.scrollIntoView(true);
-        SelenideElement removeBtn = item.$("[data-test^='remove-']");
-        removeBtn.shouldBe(visible, enabled).click();
-        item.should(disappear);
+        item.shouldBe(visible).scrollIntoView(true);
+        SelenideElement removeBtn = item.$("button.cart_button, button[data-test^='remove-']");
+        removeBtn.shouldBe(visible, enabled).scrollIntoView(true);
+
+        removeBtn.click();
+        cartItems.filterBy(text(itemName)).shouldHave(size(0));
         return this;
     }
 
