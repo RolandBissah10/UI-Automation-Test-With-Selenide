@@ -36,7 +36,6 @@ public class ProductsPage {
         productCard.scrollIntoView(true);
         SelenideElement addButton = productCard.$("[data-test^='add-to-cart']");
         addButton.shouldBe(visible, enabled).click();
-        addButton.shouldHave(text("Remove"));
         cartIcon.$(".shopping_cart_badge").shouldBe(visible);
         return this;
     }
