@@ -36,36 +36,13 @@ public class ProductsPage {
                 .replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("-+", "-")
                 .replaceAll("^-|-$", "");
-        String removeDataTest = "remove-" + dataTest.replace("add-to-cart-", "");
-
-        SelenideElement addBtn = $("[data-test='" + dataTest + "']").shouldBe(visible);
-        // Scroll into view before clicking — on CI the viewport may not cover all product cards
-        addBtn.scrollIntoView(true);
-        addBtn.click();
-
-        // If the button hasn't flipped yet, fall back to a JS click
-        SelenideElement removeBtn = $("[data-test='" + removeDataTest + "']");
-        if (!removeBtn.is(visible)) {
-            executeJavaScript("arguments[0].click()", addBtn.getWrappedElement());
-        }
-
-        // Wait for the button to flip to "Remove" — confirms the add actually registered
-        removeBtn.shouldBe(visible);
+        $("[data-test='" + dataTest + "']").shouldBe(visible).click();
         return this;
     }
 
     @Step("Add first product to cart")
     public ProductsPage addFirstProductToCart() {
-        SelenideElement btn = addToCartBtns.first().shouldBe(visible);
-        // Derive the expected remove button from the add button's data-test attribute
-        String addDataTest = btn.getAttribute("data-test");
-        String removeDataTest = addDataTest != null
-                ? addDataTest.replace("add-to-cart-", "remove-")
-                : null;
-        btn.click();
-        if (removeDataTest != null) {
-            $("[data-test='" + removeDataTest + "']").shouldBe(visible);
-        }
+        addToCartBtns.first().shouldBe(visible).click();
         return this;
     }
 
@@ -100,17 +77,8 @@ public class ProductsPage {
 
     @Step("Open hamburger menu")
     public MenuPage openMenu() {
-        SelenideElement menuBtn = $("#react-burger-menu-btn").shouldBe(visible);
-        menuBtn.click();
-
-        // The bm-menu-wrap aria-hidden attribute is unreliable across browser versions.
-        // Instead wait directly for the sidebar link to become visible, with a JS click
-        // fallback in case the first click didn't register on CI.
-        SelenideElement sidebarLink = $("#inventory_sidebar_link");
-        if (!sidebarLink.is(visible)) {
-            executeJavaScript("arguments[0].click()", menuBtn.getWrappedElement());
-        }
-        sidebarLink.shouldBe(visible);
+        $("#react-burger-menu-btn").shouldBe(visible).click();
+        $("#inventory_sidebar_link").shouldBe(visible);
         return new MenuPage();
     }
 
