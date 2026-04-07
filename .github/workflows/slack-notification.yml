@@ -64,6 +64,12 @@ jobs:
           echo "=== INPUT tests_failed ==="
           echo "$TESTS_FAILED"
 
+          # 🔥 Limit failed test output (Slack has size limits ~3000 chars)
+          MAX_LENGTH=2500
+          if [ ${#FAILED_TESTS} -gt $MAX_LENGTH ]; then
+            FAILED_TESTS="${FAILED_TESTS:0:$MAX_LENGTH}\n... (truncated)"
+          fi
+
           # Build base fields
           BASE_FIELDS=$(jq -n \
             --arg repo     "${{ github.repository }}" \
@@ -71,7 +77,7 @@ jobs:
             --arg run      "${{ github.run_number }}" \
             --arg commit   "${{ github.sha }}" \
             --arg results  "Total: *${{ inputs.tests_total }}*  |  ✅ Passed: *${{ inputs.tests_passed }}*  |  ❌ Failed: *${{ inputs.tests_failed }}*  |  ⏭ Skipped: *${{ inputs.tests_skipped }}*" \
-            '[
+            '[ 
               {"title": "Repository",   "value": $repo,    "short": true},
               {"title": "Branch",       "value": $branch,  "short": true},
               {"title": "Run #",        "value": $run,     "short": true},
@@ -81,19 +87,19 @@ jobs:
 
           FIELDS="$BASE_FIELDS"
 
-          # Add passed tests field — only show on failure
+          # ✅ Show passed tests ONLY when there are failures (optional)
           if [ "$STATUS" != "success" ] && [ -n "$PASSED_TESTS" ]; then
             PASSED_FIELD=$(jq -n \
-              --arg val "$(printf '```\n%s\n```' "$PASSED_TESTS")" \
+              --arg val "$(printf '```%s```' "$PASSED_TESTS")" \
               '{"title": "✅ Passed Tests", "value": $val, "short": false}')
             FIELDS=$(echo "$FIELDS" | jq --argjson f "$PASSED_FIELD" '. + [$f]')
           fi
 
-          # Add failed tests field if any
+          # 🔥 Show detailed failed tests
           if [ "$TESTS_FAILED" != "0" ] && [ "$TESTS_FAILED" != "N/A" ] && [ -n "$FAILED_TESTS" ]; then
             FAILED_FIELD=$(jq -n \
-              --arg val "$(printf '```\n%s\n```' "$FAILED_TESTS")" \
-              '{"title": "❌ Failed Tests", "value": $val, "short": false}')
+              --arg val "$(printf '```%s```' "$FAILED_TESTS")" \
+              '{"title": "❌ Failed Tests (Details)", "value": $val, "short": false}')
             FIELDS=$(echo "$FIELDS" | jq --argjson f "$FAILED_FIELD" '. + [$f]')
           fi
 

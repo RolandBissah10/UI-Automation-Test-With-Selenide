@@ -229,7 +229,6 @@ jobs:
       tests_passed: ${{ needs.parse-results.outputs.tests_passed }}
       tests_failed: ${{ needs.parse-results.outputs.tests_failed }}
       tests_skipped: ${{ needs.parse-results.outputs.tests_skipped }}
-      passed_tests: '' # Optional, you could populate later
       failed_tests: ${{ needs.parse-results.outputs.failed_tests }}
 
   # ── Email Notification ───────────────────────────────────
