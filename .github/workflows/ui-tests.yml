@@ -25,11 +25,8 @@ env:
   MAVEN_OPTS: "-Xmx2g"
 
 jobs:
-  # ── Smoke tests ──────────────────────────────────────────
   smoke-tests:
-    name: "Smoke Tests"
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -55,16 +52,7 @@ jobs:
           name: surefire-reports-smoke
           path: target/surefire-reports
 
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results-smoke
-          path: target/allure-results
-
-  # ── Regression tests ─────────────────────────────────────
   regression-tests:
-    name: "Regression Tests"
     runs-on: ubuntu-latest
     if: github.event_name != 'workflow_dispatch' || inputs.suite != 'smoke'
 
@@ -93,15 +81,8 @@ jobs:
           name: surefire-reports-regression
           path: target/surefire-reports
 
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results-regression
-          path: target/allure-results
-
+  # 🔥 FIXED PARSE RESULTS
   parse-results:
-    name: Parse Test Results
     runs-on: ubuntu-latest
     needs: [ smoke-tests, regression-tests ]
     if: always()
@@ -111,6 +92,8 @@ jobs:
       tests_passed:  ${{ steps.parse.outputs.tests_passed }}
       tests_failed:  ${{ steps.parse.outputs.tests_failed }}
       tests_skipped: ${{ steps.parse.outputs.tests_skipped }}
+      failed_tests:  ${{ steps.parse.outputs.failed_tests }}
+      status:        ${{ steps.parse.outputs.status }}
 
     steps:
       - name: Download smoke reports
@@ -131,7 +114,8 @@ jobs:
         id: parse
         run: |
           TOTAL=0; FAILED=0; SKIPPED=0
-          FAILED_TESTS=""
+          FAILED_TESTS_FILE="failed_tests.txt"
+          > $FAILED_TESTS_FILE
 
           for xml in reports/TEST-*.xml; do
             [ -f "$xml" ] || continue
@@ -145,103 +129,59 @@ jobs:
             FAILED=$((FAILED + f + e))
             SKIPPED=$((SKIPPED + s))
 
-            # Get failed test names
-            if [ "$f" -gt 0 ] || [ "$e" -gt 0 ]; then
-              FAILS=$(grep -oP 'classname="[^"]+"\s+name="[^"]+"' "$xml" | awk -F'name="' '{print $2}' | awk -F'"' '{print $1}')
-              for test in $FAILS; do
-                FAILED_TESTS="${FAILED_TESTS}${test}\n"
-              done
-            fi
+            # ✅ Extract ONLY failed tests with reason
+            awk '
+              /<testcase / {
+                match($0, /classname="([^"]+)"/, c)
+                match($0, /name="([^"]+)"/, n)
+                classname=c[1]; name=n[1]
+              }
+
+              /<failure|<error/ {
+                message="No message"
+                if (match($0, /message="([^"]+)"/, m)) {
+                  message=m[1]
+                }
+                printf "• %s.%s\n  Reason: %s\n\n", classname, name, message
+              }
+            ' "$xml" >> $FAILED_TESTS_FILE
+
           done
 
           PASSED=$((TOTAL - FAILED - SKIPPED))
 
-          # Output totals and failed tests
           echo "tests_total=$TOTAL"     >> $GITHUB_OUTPUT
           echo "tests_passed=$PASSED"   >> $GITHUB_OUTPUT
           echo "tests_failed=$FAILED"   >> $GITHUB_OUTPUT
           echo "tests_skipped=$SKIPPED" >> $GITHUB_OUTPUT
-          echo "failed_tests=$FAILED_TESTS" >> $GITHUB_OUTPUT
 
-          # Set overall status
+          # ✅ Multiline output FIX
+          echo "failed_tests<<EOF" >> $GITHUB_OUTPUT
+          cat $FAILED_TESTS_FILE >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # ✅ Status for Slack
           if [ "$FAILED" -eq 0 ]; then
             echo "status=success" >> $GITHUB_OUTPUT
           else
             echo "status=failure" >> $GITHUB_OUTPUT
           fi
 
-  # ── Allure Report ─────────────────────────────────────────
-  generate-report:
-    name: Generate Allure Report
-    runs-on: ubuntu-latest
-    needs: [ smoke-tests, regression-tests ]
-    if: always()
-    permissions:
-      contents: write
+          # 🔍 Debug
+          echo "========= FAILED TESTS ========="
+          cat $FAILED_TESTS_FILE
+          echo "================================"
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download smoke results
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-results-smoke
-          path: target/allure-results
-        continue-on-error: true
-
-      - name: Download regression results
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-results-regression
-          path: target/allure-results
-        continue-on-error: true
-
-      - name: Generate Allure report (TLS FIXED)
-        run: |
-          curl -L --tlsv1.2 -o allure.tgz \
-            https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
-          tar -zxf allure.tgz
-          ./allure-2.27.0/bin/allure generate target/allure-results --clean -o target/allure-report
-
-      - name: Upload Allure report
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report
-          path: target/allure-report
-
-      - name: Publish to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: target/allure-report
-
-  # ── Slack Notification ───────────────────────────────────
+  # 🔔 SLACK
   notify-slack:
     needs: parse-results
     if: always()
     uses: ./.github/workflows/slack-notification.yml
     secrets: inherit
     with:
-      status: ${{ needs.parse-results.outputs.status }}
-      tests_total: ${{ needs.parse-results.outputs.tests_total }}
-      tests_passed: ${{ needs.parse-results.outputs.tests_passed }}
-      tests_failed: ${{ needs.parse-results.outputs.tests_failed }}
-      tests_skipped: ${{ needs.parse-results.outputs.tests_skipped }}
-      failed_tests: ${{ needs.parse-results.outputs.failed_tests }}
-
-  # ── Email Notification ───────────────────────────────────
-  notify-email:
-    needs: parse-results
-    if: always()
-    uses: ./.github/workflows/email-notification.yml
-    secrets: inherit
-    with:
-      status:        ${{ needs.parse-results.result }}
+      status:        ${{ needs.parse-results.outputs.status }}
       tests_total:   ${{ needs.parse-results.outputs.tests_total }}
       tests_passed:  ${{ needs.parse-results.outputs.tests_passed }}
       tests_failed:  ${{ needs.parse-results.outputs.tests_failed }}
       tests_skipped: ${{ needs.parse-results.outputs.tests_skipped }}
-      passed_tests:  ''
-      failed_tests:  ''
+      failed_tests:  ${{ needs.parse-results.outputs.failed_tests }}
