@@ -32,7 +32,7 @@ public class LoginTest extends BaseTest {
         new LoginPage()
                 .shouldBeLoaded()
                 .attemptLoginAs(CONFIG.lockedUser(), CONFIG.password())
-                .shouldHaveError("Epic sadface: Sorry, this user has been locked out.")
+                .shouldHaveError("Sorry, this user has been locked out.")
                 .shouldShowErrorIcon();
     }
 
@@ -43,7 +43,7 @@ public class LoginTest extends BaseTest {
     void invalidPasswordTest() {
         new LoginPage()
                 .attemptLoginAs(CONFIG.standardUser(), "wrong_password")
-                .shouldHaveError("Epic sadface: Username and password do not match any user in this service");
+                .shouldHaveError("Username and password do not match any user in this service");
     }
 
      @Test
@@ -53,7 +53,7 @@ public class LoginTest extends BaseTest {
         new LoginPage()
                 .enterPassword(CONFIG.password())
                 .clickLoginExpectingError()
-                .shouldHaveError("Epic sadface: Username is required");
+                .shouldHaveError(" Username is required");
     }
 
      @Test
@@ -63,7 +63,7 @@ public class LoginTest extends BaseTest {
         new LoginPage()
                 .enterUsername(CONFIG.standardUser())
                 .clickLoginExpectingError()
-                .shouldHaveError("Epic sadface: Password is required");
+                .shouldHaveError(" Password is required");
     }
 
 

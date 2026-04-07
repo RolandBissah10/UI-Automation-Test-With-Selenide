@@ -32,22 +32,6 @@ public interface TestConfig extends Config {
     @DefaultValue("locked_out_user")
     String lockedUser();
 
-    @Key("problem.user")
-    @DefaultValue("problem_user")
-    String problemUser();
-
-    @Key("performance.glitch.user")
-    @DefaultValue("performance_glitch_user")
-    String performanceGlitchUser();
-
-    @Key("error.user")
-    @DefaultValue("error_user")
-    String errorUser();
-
-    @Key("visual.user")
-    @DefaultValue("visual_user")
-    String visualUser();
-
     @Key("password")
     @DefaultValue("secret_sauce")
     String password();

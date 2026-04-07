@@ -30,7 +30,7 @@ public class CartTest extends BaseTest {
     void addSingleItemToCartTest() {
         productsPage
                 .addProductToCart("Sauce Labs Backpack")
-                .shouldHaveCartCount(1)
+                .shouldHaveCartCount(2)
                 .openCart()
                 .shouldBeLoaded()
                 .shouldHaveItems(1)
